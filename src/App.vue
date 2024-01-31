@@ -9,8 +9,6 @@ const Genero: Ref<string> = ref("");
 const GeneroPersonalizado: Ref<string> = ref("");
 const errors: Ref<string[]> = ref([]);
 
-const greetingMessage: Ref<string> = ref("");
-
 const validarForm = () => {
   errors.value = [];
 
