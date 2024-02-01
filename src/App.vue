@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import type { Ref } from "vue";
 
 const Nombre: Ref<string> = ref("");
@@ -7,52 +7,70 @@ const Apellido: Ref<string> = ref("");
 const Edad: Ref<number> = ref(0);
 const Genero: Ref<string> = ref("");
 const GeneroPersonalizado: Ref<string> = ref("");
-const errors: Ref<string[]> = ref([]);
+const errors: Ref<{[key: string]:string}> = ref({});
 
 const validarForm = () => {
-  errors.value = [];
+  errors.value = {};
+
+  if (Nombre.value.trim() === "") {
+    errors.value.Nombre="El campo Nombre no puede estar vacío";
+  } else if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(Nombre.value.trim())) {
+    errors.value.Nombre = "El nombre solo puede contener letras y espacios";
+  }
+
+  if (Apellido.value.trim() === "") {
+    errors.value.Apellido="El campo Apellido no puede estar vacío";
+  } else if (!/^[A-Za-zÀ-ÖØ-öø-ÿ\s]+$/.test(Apellido.value.trim())) {
+    errors.value.Apellido = "El apellido solo puede contener letras y espacios";
+  }
 
   // Validar el Nombre
   if (Nombre.value.length < 5 || Nombre.value.length > 18) {
-    errors.value.push("El nombre debe tener entre 5 y 18 caracteres");
+    errors.value.Nombre="El nombre debe tener entre 5 y 18 caracteres";
   }
 
   // Validar el apellido
   if (Apellido.value === Nombre.value) {
-    errors.value.push("El Apellido no debe ser igual al nombre");
+    errors.value.Apellido="El Apellido no debe ser igual al nombre";
   }
 
   // Validar la Edad
-  if (Edad.value <= 0 || Edad.value >= 60) {
-    errors.value.push("la edad debe ser mayor a 0 y menor a 60");
+  if (isNaN(Edad.value) || Edad.value <= 0 || Edad.value >= 60) {
+    errors.value.Edad="la edad debe ser un número mayor a 0 y menor a 60";
   }
 
   // Validar el Genero
   if (!["Masculino", "Femenino", "Otro"].includes(Genero.value)) {
-    errors.value.push("Genero inválido");
+    errors.value.Genero="Genero inválido";
   } else if (Genero.value === "Otro" && GeneroPersonalizado.value === "") {
-    errors.value.push("Ingresa el genero");
+    errors.value.GeneroPersonalizado="Ingresa el genero";
   }
 };
 
+onMounted(() => {
+  validarForm();
+});
 
 </script>
 
 <template>
-  <main>
+  <main class="form">
     <div>
       <label>Nombre:</label>
-      <input @input="validarForm()" v-model="Nombre" type="text">
+      <input @input="validarForm()" v-model="Nombre" type="text" id="nombre" pattern="[A-Za-zÀ-ÖØ-öø-ÿ\s]+" required>
+      <span v-if="errors.Nombre" class="error">{{ errors.Nombre }}</span>
     </div>
 
     <div>
       <label>Apellido:</label>
       <input @input="validarForm()" v-model="Apellido" type="text">
+      <span v-if="errors.Apellido" class="error">{{ errors.Apellido }}</span>
     </div>
 
     <div>
       <label>Edad:</label>
       <input @input="validarForm()" v-model.number="Edad" type="number">
+      <span v-if="errors.Edad" class="error">{{ errors.Edad }}</span>
     </div>
 
     <div>
@@ -69,17 +87,13 @@ const validarForm = () => {
         @input="validarForm()"
         v-model="GeneroPersonalizado"
         type="text"
-        placeholder="Ingresa el género"
+        placeholder="Ingresa el nuevo género"
       />
+      <span v-if="errors.Genero || errors.GeneroPersonalizado" class="error">{{ errors.Genero || errors.GeneroPersonalizado }}</span>
     </div>
 
-    <h1 :class="{'msj':Nombre}">Hola {{Nombre}} {{ Apellido }}, tienes {{ Edad }} años y tu género es {{ Genero === 'Otro' ? GeneroPersonalizado : Genero }}.</h1>
+    <h1 class="msj">Hola {{Nombre}} {{ Apellido }}, tienes {{ Edad }} años y tu género es {{ Genero === 'Otro' ? GeneroPersonalizado : Genero }}</h1>
 
-    <h3>Errores:</h3>
-    <span v-for="(err, index) in errors" :key="index" class="error">
-      {{ err }}
-      <br>
-    </span>
   </main>
 </template>
 
@@ -93,31 +107,38 @@ main {
 
   label {
     display: block;
-    margin-bottom: 5px;
+    margin: 15px 0 0 0;
   }
 
   input,
   select {
-    width: 100%;
+    width: 100%;  
     padding: 8px;
     margin-bottom: 15px;
     box-sizing: border-box;
+    border-radius: 10px;
   }
 
   h1 {
     margin-top: 20px;
     font-size: 1.5em;
   }
+
+  .form{
+    background-color:rgb(21, 21, 76);
+    border-radius: 10px;
+  }
   .error {
     color: white;
     background-color: red;
-    border: 1px solid white;
+    border-radius: 5px;
+    padding: 5px;
   }
 
   .msj {
     color: white;
-    background-color: rgb(175, 0, 188);
     border: 1px solid white;
+    border-radius: 10px;
+    padding: 7px;
   }
-
 </style>
